@@ -55,21 +55,29 @@ npm run package      # Create .vsix package
 
 The extension follows this flow on workspace open:
 
-1. Check `selectiveExtensions.enabled` (user-scope opt-out via `inspect()`)
-2. Merge user + workspace `enabledExtensions` lists (union)
-3. Check loop prevention flag (env var `SELECTIVE_EXTENSIONS_APPLIED`)
-4. Compute `disableList = allInstalled - enableList`
-5. Show notification with Apply Now / Skip
-6. Relaunch via `code --reuse-window` with `--disable-extension` flags
+1. Read config from three-level cascade (user settings.json,
+   workspace settings.json, .vscode/selective-extensions.json)
+2. Resolve `enabled` (highest-specificity wins); stop if false
+3. Merge `enabledExtensions` (union of all levels); stop if empty
+4. Check loop prevention flag (env var `SELECTIVE_EXTENSIONS_APPLIED`)
+5. Compute `disableList = allInstalled - enableList`
+6. Show notification with Apply Now / Skip
+7. Relaunch via `code --reuse-window` with `--disable-extension` flags
 
-## Settings Namespace
+## Configuration Cascade
 
-All settings are under `selectiveExtensions.*`:
+Three levels, highest specificity wins for scalars, union for arrays:
 
-- `enabled` (boolean) - master toggle, user-scope opt-out
-- `enabledExtensions` (string[]) - allow list of extension IDs
-- `autoApply` (boolean) - auto-relaunch on workspace open
-- `includeBuiltins` (boolean) - manage built-in extensions too
+| Priority | Source                              | Audience             |
+| -------- | ----------------------------------- | -------------------- |
+| 1 (low)  | User `settings.json`                | Personal global base |
+| 2        | Workspace `.vscode/settings.json`   | Team / shared        |
+| 3 (high) | `.vscode/selective-extensions.json` | Personal per-project |
+
+Settings in `settings.json` use the `selectiveExtensions.*` namespace.
+The dedicated file uses bare keys (no namespace).
+
+Settings: `enabled`, `enabledExtensions`, `autoApply`, `includeBuiltins`
 
 ## Git Workflow
 

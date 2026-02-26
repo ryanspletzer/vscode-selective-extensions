@@ -26,10 +26,12 @@ The consequences compound in modern development workflows:
 
 - Provide an **allow-list** model:
   declare which extensions should be active and disable everything else
-- Store configuration in `settings.json`
-  using VS Code's standard user/workspace cascade
-- Merge user-level and workspace-level enable lists via union
-- Allow individual users to opt out regardless of workspace settings
+- Store configuration across a three-level cascade:
+  user `settings.json`, workspace `.vscode/settings.json`,
+  and `.vscode/selective-extensions.json`
+- Merge enable lists via union across all levels
+- Allow per-project opt-out via `.vscode/selective-extensions.json`
+  without affecting team-committed settings
 - Relaunch the current VS Code window with `--disable-extension` flags
   for extensions not on the allow list
 - Provide command palette commands for managing the enable list
@@ -49,52 +51,110 @@ The consequences compound in modern development workflows:
 
 ## Configuration Schema
 
-All settings live under the `selectiveExtensions` namespace.
+Configuration is read from a **three-level cascade**.
+Later levels override earlier levels for scalar settings
+(`enabled`, `autoApply`, `includeBuiltins`).
+For the `enabledExtensions` array, all levels are **merged via union**.
 
-### `selectiveExtensions.enabled`
+### Cascade Levels
 
-| Property | Value         |
-| -------- | ------------- |
-| Type     | `boolean`     |
-| Default  | `true`        |
-| Scope    | `application` |
+| Priority | Source                                | Audience               |
+| -------- | ------------------------------------- | ---------------------- |
+| 1 (low)  | User `settings.json`                  | Personal global base   |
+| 2        | Workspace `.vscode/settings.json`     | Team / shared          |
+| 3 (high) | `.vscode/selective-extensions.json`   | Personal per-project   |
+
+**Level 1 — User `settings.json`** (global, all workspaces):
+settings under the `selectiveExtensions.*` namespace
+in the user-level `settings.json`.
+Ideal for a personal "always-on" base set
+(themes, keybindings, utilities).
+
+**Level 2 — Workspace `.vscode/settings.json`** (per-project, team-shared):
+settings under the `selectiveExtensions.*` namespace
+in the workspace-level `settings.json`.
+Teams can commit this to source control
+to declare project-specific extensions.
+
+**Level 3 — `.vscode/selective-extensions.json`** (per-project, personal):
+a dedicated file owned entirely by this extension.
+Keys are **not namespaced** (e.g., `enabledExtensions` not
+`selectiveExtensions.enabledExtensions`) because the file
+is scoped to this extension already.
+This file has the highest specificity:
+a developer can use it to add personal project-level extensions,
+opt out of a team configuration,
+or skip the other levels entirely and configure everything here.
+It is up to the individual or team whether to commit this file.
+
+A user who only wants a single source of truth can put everything
+in `.vscode/selective-extensions.json` and ignore the other levels.
+
+### Merge and Override Rules
+
+- **`enabledExtensions`**: union of all three levels.
+  Extensions from every level are combined into one set.
+- **`enabled`**, **`autoApply`**, **`includeBuiltins`**:
+  highest-specificity level wins
+  (level 3 overrides level 2 overrides level 1).
+  If a level does not define a setting, the next lower level applies.
+  If no level defines it, the default applies.
+
+### `.vscode/selective-extensions.json` Format
+
+```json
+{
+  "enabled": true,
+  "enabledExtensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance"
+  ],
+  "autoApply": true,
+  "includeBuiltins": false
+}
+```
+
+All keys are optional.
+Only the keys present participate in the cascade.
+
+### Settings Reference
+
+#### `enabled`
+
+| Property | Value     |
+| -------- | --------- |
+| Type     | `boolean` |
+| Default  | `true`    |
 
 Controls whether the extension is active.
-The extension reads this setting from the **user scope** via
-`configuration.inspect().globalValue`.
-A user can always opt out by setting this to `false` at the user level,
-even if a workspace sets it to `true`.
-
 When `false`, the extension takes no action on workspace open
 and all commands are no-ops.
 
-### `selectiveExtensions.enabledExtensions`
+A developer can set `enabled: false` in
+`.vscode/selective-extensions.json` to opt out of a team configuration
+without modifying the shared `.vscode/settings.json`.
+
+#### `enabledExtensions`
 
 | Property | Value               |
 | -------- | ------------------- |
 | Type     | `array` of `string` |
 | Default  | `[]`                |
-| Scope    | `resource`          |
 
 Array of extension identifiers (e.g., `"ms-python.python"`)
 that should remain enabled.
 The extension always implicitly includes itself in this list.
 
-**Merge behavior**: the final enable list is the **union** of:
-
-1. User-level `enabledExtensions` (personal base set)
-2. Workspace-level `enabledExtensions` (project-specific additions)
-
-An empty list at both levels means the extension takes no action
+The final enable list is the **union** of all three cascade levels.
+An empty list across all levels means the extension takes no action
 (there is nothing to enforce).
 
-### `selectiveExtensions.autoApply`
+#### `autoApply`
 
-| Property | Value      |
-| -------- | ---------- |
-| Type     | `boolean`  |
-| Default  | `true`     |
-| Scope    | `resource` |
+| Property | Value     |
+| -------- | --------- |
+| Type     | `boolean` |
+| Default  | `true`    |
 
 When `true`, the extension automatically evaluates and triggers a relaunch
 on workspace open if the current extension state does not match
@@ -103,13 +163,12 @@ the desired enable list.
 When `false`, the user must manually run the
 `Selective Extensions: Apply` command.
 
-### `selectiveExtensions.includeBuiltins`
+#### `includeBuiltins`
 
-| Property | Value      |
-| -------- | ---------- |
-| Type     | `boolean`  |
-| Default  | `false`    |
-| Scope    | `resource` |
+| Property | Value     |
+| -------- | --------- |
+| Type     | `boolean` |
+| Default  | `false`   |
 
 When `true`, built-in extensions (those shipped with VS Code)
 are also subject to the enable list.
@@ -131,31 +190,32 @@ This is the manual trigger equivalent of the automatic behavior.
 **Title**: Selective Extensions: Add Extension to Enable List
 
 Shows a quick-pick of all installed extensions (excluding those already
-on the enable list) and adds the selected extension(s) to the
-workspace-level `enabledExtensions` setting.
+on the enable list) and adds the selected extension(s) to
+`.vscode/selective-extensions.json` (creating the file if needed).
 
 ### `selectiveExtensions.removeExtension`
 
 **Title**: Selective Extensions: Remove Extension from Enable List
 
 Shows a quick-pick of extensions currently on the enable list
-and removes the selected extension(s) from the workspace-level
-`enabledExtensions` setting.
+and removes the selected extension(s) from
+`.vscode/selective-extensions.json`.
 
 ### `selectiveExtensions.showList`
 
 **Title**: Selective Extensions: Show Enable List
 
-Displays the computed enable list (merged user + workspace)
+Displays the computed enable list (merged across all cascade levels)
 in an information message or quick-pick, showing the source
-(user/workspace) for each entry.
+(user / workspace / selective-extensions.json) for each entry.
 
 ### `selectiveExtensions.importRecommendations`
 
 **Title**: Selective Extensions: Import from Recommendations
 
 Reads `.vscode/extensions.json` `recommendations` array
-and adds all entries to the workspace-level `enabledExtensions` setting.
+and adds all entries to `.vscode/selective-extensions.json`
+(creating the file if needed).
 Existing entries are preserved (union merge).
 
 ## Status Bar
@@ -177,31 +237,34 @@ A status bar item displays the enabled extension count:
 ```text
 1. VS Code opens workspace
 2. Extension activates (activation event: onStartupFinished)
-3. Check selectiveExtensions.enabled via inspect().globalValue
-   - If false at user level → stop (user opted out)
-4. Read enabledExtensions from user + workspace scopes
-   - Compute merged enable list (union)
+3. Read configuration from all three cascade levels:
+   - User settings.json (selectiveExtensions.*)
+   - Workspace .vscode/settings.json (selectiveExtensions.*)
+   - .vscode/selective-extensions.json (if present)
+4. Resolve enabled setting (highest-specificity level wins)
+   - If false → stop (opted out)
+5. Compute merged enabledExtensions (union of all levels)
    - If empty → stop (nothing to enforce)
-5. Check loop prevention flag
+6. Check loop prevention flag
    - If flag is set → clear flag, stop (already relaunched)
-6. Get all installed extensions via vscode.extensions.all
+7. Get all installed extensions via vscode.extensions.all
    - Filter to non-builtin (unless includeBuiltins is true)
    - Compute: disableList = installedExtensions - enableList
    - If disableList is empty → stop (all extensions are wanted)
-7. Check autoApply setting
+8. Resolve autoApply setting (highest-specificity level wins)
    - If false → stop (user will trigger manually)
-8. Set loop prevention flag
-9. Show notification: "Selective Extensions will restart VS Code
+9. Set loop prevention flag
+10. Show notification: "Selective Extensions will restart VS Code
    to apply your extension configuration."
    - Buttons: [Apply Now] [Skip]
-   - Apply Now → proceed to step 10
+   - Apply Now → proceed to step 11
    - Skip → clear loop prevention flag, stop
-10. Build CLI command:
+11. Build CLI command:
     code --reuse-window <workspace-path> --disable-extension <id1>
     --disable-extension <id2> ...
-11. Execute command via child_process
-12. Current window closes, new window opens with restricted extensions
-13. Extension activates again → step 5 catches the flag → stops
+12. Execute command via child_process
+13. Current window closes, new window opens with restricted extensions
+14. Extension activates again → step 6 catches the flag → stops
 ```
 
 ### Notification UX
@@ -239,17 +302,19 @@ unrelated window opens.
 ## Multi-Root Workspaces
 
 In a multi-root workspace, each folder may have its own
-`.vscode/settings.json` with a different `enabledExtensions` list.
+`.vscode/settings.json` and `.vscode/selective-extensions.json`
+with different `enabledExtensions` lists.
 
 **Behavior**: the extension computes a **single merged list**
-as the union of all folder-level lists plus the user-level list.
+as the union of all lists across all folders and all cascade levels.
 
 This means opening a multi-root workspace with folders A and B,
 where A enables `[ext1, ext2]` and B enables `[ext2, ext3]`,
-results in a final enable list of `[ext1, ext2, ext3]`.
+results in a final enable list of `[ext1, ext2, ext3]`
+(plus any extensions from the user-level base set).
 
 This is the most permissive approach -
-no extension requested by any folder is disabled.
+no extension requested by any folder or cascade level is disabled.
 
 ## Edge Cases
 
