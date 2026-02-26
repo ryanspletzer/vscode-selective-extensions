@@ -14,6 +14,8 @@ spec/
 esbuild.mjs
 eslint.config.mjs
 tsconfig.json
+CLAUDE.md
+bun.lock
 **/*.test.ts
 **/*.test.js
 **/*.map

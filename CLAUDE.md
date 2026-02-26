@@ -10,18 +10,20 @@ per workspace, disabling everything else via CLI relaunch.
 | Language        | TypeScript (strict mode) |
 | Bundler         | esbuild                  |
 | Test framework  | Mocha                    |
-| Package manager | npm                      |
+| Package manager | Bun (preferred) or npm   |
 
 ## Build Commands
 
+Bun is preferred but all commands also work with `npm run`.
+
 ```bash
-npm install          # Install dependencies
-npm run compile      # TypeScript compilation
-npm run bundle       # esbuild production bundle
-npm run watch        # Watch mode for development
-npm run test         # Run Mocha tests
-npm run lint         # ESLint
-npm run package      # Create .vsix package
+bun install          # Install dependencies
+bun run compile      # TypeScript compilation
+bun run bundle       # esbuild production bundle
+bun run watch        # Watch mode for development
+bun run test         # Run Mocha tests
+bun run lint         # ESLint
+bun run package      # Create .vsix package
 ```
 
 ## Code Style
@@ -39,7 +41,8 @@ npm run package      # Create .vsix package
 - Unit tests with Mocha
 - VS Code extension integration tests via `@vscode/test-electron`
 - Test files live alongside source in `src/test/`
-- Run tests: `npm run test`
+- Run tests: `bun run test` (or `npm run test`)
+- Mocha TDD interface (`suite`/`test`, not `describe`/`it`)
 
 ## Key File Paths
 
@@ -47,6 +50,12 @@ npm run package      # Create .vsix package
 | ------------------ | ------------------------------------------ |
 | `spec/spec.md`     | Extension specification                    |
 | `src/extension.ts` | Main extension entry point                 |
+| `src/config.ts`    | Three-level config cascade reader          |
+| `src/relaunch.ts`  | CLI detection and process execution        |
+| `src/commands.ts`  | All 5 command handlers                     |
+| `src/statusBar.ts` | Status bar item management                 |
+| `src/loopGuard.ts` | Env var loop prevention                    |
+| `src/logger.ts`    | Output Channel wrapper                     |
 | `src/test/`        | Test files                                 |
 | `package.json`     | Extension manifest and contribution points |
 | `.vscodeignore`    | Files excluded from .vsix package          |
@@ -84,4 +93,4 @@ Settings: `enabled`, `enabledExtensions`, `autoApply`, `includeBuiltins`
 - Main branch: `main`
 - Feature branches: `feature/<description>`
 - Conventional commits preferred
-- Run `npm run lint` and `npm run test` before committing
+- Run `bun run lint` and `bun run test` before committing
