@@ -134,7 +134,7 @@ can compile, lint, and run tests.
 
 **Tasks:**
 
-- [ ] Flesh out `package.json`:
+- [x] Flesh out `package.json`:
   add `main` (`./dist/extension.js`),
   `publisher` (`ryanspletzer`),
   `categories` (`["Other"]`),
@@ -146,23 +146,23 @@ can compile, lint, and run tests.
   `esbuild`, `eslint`, `@typescript-eslint/eslint-plugin`,
   `@typescript-eslint/parser`,
   `mocha`, `@vscode/test-electron`)
-- [ ] Create `tsconfig.json`:
+- [x] Create `tsconfig.json`:
   strict mode, `outDir: ./out`, `target: ES2022`,
   `module: Node16`, `moduleResolution: Node16`,
   `rootDir: ./src`, `lib: ["ES2022"]`
-- [ ] Create ESLint config (`eslint.config.mjs`):
+- [x] Create ESLint config (`eslint.config.mjs`):
   TypeScript rules, VS Code extension patterns
-- [ ] Create `.editorconfig`:
+- [x] Create `.editorconfig`:
   2-space indent, LF line endings, UTF-8,
   trim trailing whitespace, insert final newline
-- [ ] Create esbuild build script (`esbuild.mjs`):
+- [x] Create esbuild build script (`esbuild.mjs`):
   bundle `src/extension.ts` to `dist/extension.js`,
   `external: ['vscode']`, `platform: 'node'`,
   `format: 'cjs'`, `sourcemap: true`
-- [ ] Create `.vscodeignore`:
+- [x] Create `.vscodeignore`:
   exclude `src/`, `node_modules/`, `out/`, `.vscode-test/`,
   test files, spec/, docs/, `.code.sh`, `.code.ps1`
-- [ ] Run `bun install`,
+- [x] Run `bun install`,
   verify `bun run compile` and `bun run lint` pass
   on the empty extension entry point
 
@@ -183,19 +183,19 @@ injected VS Code API dependencies so tests can use stubs.
 
 **Tasks:**
 
-- [ ] `src/logger.ts` — Output Channel wrapper (decision 18)
+- [x] `src/logger.ts` — Output Channel wrapper (decision 18)
   - `createLogger(name: string)` returns an object with
     `info()`, `warn()`, `error()` methods
   - Wraps `vscode.window.createOutputChannel()`
   - All other modules accept the logger as a parameter
 
-- [ ] `src/loopGuard.ts` — Env var management (decision 12)
+- [x] `src/loopGuard.ts` — Env var management (decision 12)
   - `isLoopGuardSet(): boolean` — reads `process.env`
   - `setLoopGuard(): void` — sets the env var
   - `clearLoopGuard(): void` — deletes from `process.env`
   - Pure functions, trivially testable
 
-- [ ] `src/config.ts` — Cascade reader + merge (decisions 9, 17, 21)
+- [x] `src/config.ts` — Cascade reader + merge (decisions 9, 17, 21)
   - Types: `CascadeLevel`, `ResolvedConfig`, `ConfigWithProvenance`
   - `readCascade(workspaceFolders?)`:
     reads all three levels, returns raw layers
@@ -208,7 +208,7 @@ injected VS Code API dependencies so tests can use stubs.
     show notification with "Open File" button, treat as absent)
   - Handles multi-root (iterate all workspace folders for levels 2-3)
 
-- [ ] `src/relaunch.ts` — CLI builder + process execution (decisions 10, 22)
+- [x] `src/relaunch.ts` — CLI builder + process execution (decisions 10, 22)
   - `detectCliVariant(): string` — maps `vscode.env.appName`
     to CLI name (`code`, `code-insiders`, `codium`)
   - `resolveCliPath(variant): string` — PATH check + fallback
@@ -237,7 +237,7 @@ Wire the activation flow using the core modules.
 
 **Tasks:**
 
-- [ ] `src/extension.ts` — `activate()` implementation
+- [x] `src/extension.ts` — `activate()` implementation
   - Follow the 14-step activation flow exactly
   - Wire logger, config, loopGuard, relaunch modules
   - Register all command disposables on `context.subscriptions`
@@ -250,7 +250,7 @@ Wire the activation flow using the core modules.
     the active color theme and icon theme
   - `deactivate()` — dispose logger
 
-- [ ] Compute mismatch state at activation for status bar (decision 7):
+- [x] Compute mismatch state at activation for status bar (decision 7):
   compare the resolved enable list against currently active extensions
 
 **Success criteria:**
@@ -266,7 +266,7 @@ Implement the 5 commands and the status bar item.
 
 **Tasks:**
 
-- [ ] `src/commands.ts` — all command handlers
+- [x] `src/commands.ts` — all command handlers
 
   - `apply`: read config, compute disable list,
     show confirmation notification with counts (decision 20),
@@ -287,7 +287,7 @@ Implement the 5 commands and the status bar item.
     union merge into `.vscode/selective-extensions.json`,
     show info notification if file missing or empty
 
-- [ ] `src/statusBar.ts` — status bar lifecycle
+- [x] `src/statusBar.ts` — status bar lifecycle
 
   - Create `StatusBarItem` with `$(extensions) N enabled` format
   - Mismatch state: switch to `$(warning) N enabled (relaunch needed)`
@@ -311,7 +311,7 @@ Write unit and integration tests.
 
 **Tasks:**
 
-- [ ] `src/test/config.test.ts` — config cascade merge
+- [x] `src/test/config.test.ts` — config cascade merge
   - Empty config at all levels
   - Single level populated
   - All three levels with union merge
@@ -321,20 +321,20 @@ Write unit and integration tests.
   - Multi-root workspace merge
   - Provenance tracking correctness
 
-- [ ] `src/test/loopGuard.test.ts` — loop guard
+- [x] `src/test/loopGuard.test.ts` — loop guard
   - Set, check, clear cycle
   - Check when not set
 
-- [ ] `src/test/relaunch.test.ts` — CLI builder
+- [x] `src/test/relaunch.test.ts` — CLI builder
   - Command construction for each CLI variant
   - Workspace file path vs. folder path
   - Disable list with various sizes (0, 1, many)
 
-- [ ] `src/test/commands.test.ts` — light integration
+- [x] `src/test/commands.test.ts` — light integration
   - Command registration verification
   - Config file write operations (add, remove, import)
 
-- [ ] `src/test/statusBar.test.ts` — status bar
+- [x] `src/test/statusBar.test.ts` — status bar
   - Count display
   - Mismatch indicator toggle
   - Visibility rules
@@ -352,8 +352,8 @@ Final polish, documentation, and .vsix packaging.
 
 **Tasks:**
 
-- [ ] Update CLAUDE.md if any conventions changed during implementation
-- [ ] Create `README.md` with:
+- [x] Update CLAUDE.md if any conventions changed during implementation
+- [x] Create `README.md` with:
   - Feature overview
   - Installation (marketplace + `.vsix`)
   - Quick start guide (manual first-run flow)
@@ -364,8 +364,8 @@ Final polish, documentation, and .vsix packaging.
   - Known limitations (remote sessions, env var inheritance,
     no first-run onboarding)
   - Bun and npm command examples side by side
-- [ ] Create `CHANGELOG.md` with v0.0.1 initial release entry
-- [ ] Run `bun run package` to produce `.vsix`
+- [x] Create `CHANGELOG.md` with v0.0.1 initial release entry
+- [x] Run `bun run package` to produce `.vsix`
 - [ ] Manually test the `.vsix` in a real VS Code window
 - [ ] Update `.vscode/settings.json` to wire test explorer
   for Mocha adapter (if needed for dev DX)
@@ -447,48 +447,48 @@ The extension contributes:
 
 ### Functional Requirements
 
-- [ ] Extension activates on `onStartupFinished`
-- [ ] Reads config from all three cascade levels
-- [ ] Merges `enabledExtensions` via union across all levels
-- [ ] Resolves `enabled`, `autoApply`, `includeBuiltins`
+- [x] Extension activates on `onStartupFinished`
+- [x] Reads config from all three cascade levels
+- [x] Merges `enabledExtensions` via union across all levels
+- [x] Resolves `enabled`, `autoApply`, `includeBuiltins`
   via highest-specificity-wins
-- [ ] Auto-includes self, active color theme, and active icon theme
+- [x] Auto-includes self, active color theme, and active icon theme
   in the enable list
-- [ ] Computes disable list = installed - enable list
-- [ ] Shows notification with disable/keep counts
+- [x] Computes disable list = installed - enable list
+- [x] Shows notification with disable/keep counts
   when mismatch detected and autoApply is true
-- [ ] Relaunches via CLI with `--reuse-window --disable-extension` flags
-- [ ] Detects VS Code variant (stable, Insiders, Codium)
+- [x] Relaunches via CLI with `--reuse-window --disable-extension` flags
+- [x] Detects VS Code variant (stable, Insiders, Codium)
   and uses correct CLI name
-- [ ] Uses `.code-workspace` file path for multi-root workspaces
-- [ ] Prevents infinite relaunch via `SELECTIVE_EXTENSIONS_APPLIED` env var
-- [ ] Notification dismiss (X/Escape) treated as Skip
-- [ ] All 5 commands registered and functional
-- [ ] Remove command shows level-3 entries as removable,
+- [x] Uses `.code-workspace` file path for multi-root workspaces
+- [x] Prevents infinite relaunch via `SELECTIVE_EXTENSIONS_APPLIED` env var
+- [x] Notification dismiss (X/Escape) treated as Skip
+- [x] All 5 commands registered and functional
+- [x] Remove command shows level-3 entries as removable,
   level-1/2 as read-only
-- [ ] Status bar shows count + mismatch indicator
-- [ ] Output Channel logs all key decisions
-- [ ] Detects remote sessions and skips auto-relaunch with notification
-- [ ] No-workspace windows read level-1 only, no relaunch
-- [ ] Malformed JSON at any level: warn, fall back, continue
-- [ ] First-run with no config: silent, no action
+- [x] Status bar shows count + mismatch indicator
+- [x] Output Channel logs all key decisions
+- [x] Detects remote sessions and skips auto-relaunch with notification
+- [x] No-workspace windows read level-1 only, no relaunch
+- [x] Malformed JSON at any level: warn, fall back, continue
+- [x] First-run with no config: silent, no action
 
 ### Non-Functional Requirements
 
-- [ ] TypeScript strict mode, zero `any` types
-- [ ] esbuild bundle under 50 KB
-- [ ] Activation time under 50 ms (no heavy I/O on hot path
+- [x] TypeScript strict mode, zero `any` types
+- [x] esbuild bundle under 50 KB
+- [x] Activation time under 50 ms (no heavy I/O on hot path
   beyond JSON reads)
-- [ ] No runtime dependencies (pure VS Code API + Node.js builtins)
-- [ ] Process execution uses `execFile` (not `exec`) to prevent injection
+- [x] No runtime dependencies (pure VS Code API + Node.js builtins)
+- [x] Process execution uses `execFile` (not `exec`) to prevent injection
 
 ### Quality Gates
 
-- [ ] `bun run lint` passes with zero warnings
-- [ ] `bun run test` passes all tests
-- [ ] Config merge logic has comprehensive branch coverage
-- [ ] `.vsix` installs and activates cleanly
-- [ ] README documents all features and known limitations
+- [x] `bun run lint` passes with zero warnings
+- [x] `bun run test` passes all tests
+- [x] Config merge logic has comprehensive branch coverage
+- [x] `.vsix` installs and activates cleanly
+- [x] README documents all features and known limitations
 
 ## Success Metrics
 
