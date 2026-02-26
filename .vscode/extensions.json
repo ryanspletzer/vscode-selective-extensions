@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "davidanson.vscode-markdownlint",
+    "usernamehw.errorlens",
+    "hbenl.vscode-test-explorer",
+    "ms-vscode.test-adapter-converter",
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    "editorconfig.editorconfig",
+    "streetsidesoftware.code-spell-checker",
+    "redhat.vscode-yaml",
+    "vscode-icons-team.vscode-icons",
+    "ms-vscode.vscode-js-profile-flame",
+    "anthropic.claude-code"
+  ]
+}

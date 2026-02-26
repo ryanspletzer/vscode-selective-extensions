@@ -1,0 +1,15 @@
+{
+  "name": "selective-extensions",
+  "displayName": "Selective Extensions",
+  "description": "Declare which extensions should be active per workspace, disabling everything else",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Ryan Spletzer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryanspletzer/vscode-selective-extensions"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  }
+}
