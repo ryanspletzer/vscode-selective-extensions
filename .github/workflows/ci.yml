@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Compile
+        run: bun run compile
+
+      - name: Test
+        run: xvfb-run -a bun run test
+
+      - name: Bundle
+        run: bun run bundle
+
+      - name: Package
+        run: bun run package
+
+      - name: Upload .vsix
+        uses: actions/upload-artifact@v4
+        with:
+          name: selective-extensions-vsix
+          path: "*.vsix"
