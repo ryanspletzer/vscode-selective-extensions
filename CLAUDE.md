@@ -122,6 +122,8 @@ GitHub Actions workflows in `.github/workflows/`:
 - **`ci.yml`** — runs on push and PR: install, lint, compile, bundle, test
 - **`codeql.yml`** — CodeQL static analysis for JavaScript/TypeScript
   (push, PR, weekly schedule)
+- **`release.yml`** — publishes to VS Code Marketplace and Open VSX
+  on `v*` tag push, creates GitHub Release with `.vsix` asset
 
 Dependabot (`.github/dependabot.yml`) opens weekly PRs for npm and
 GitHub Actions dependency updates.

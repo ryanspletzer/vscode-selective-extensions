@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+
+    steps:
+      - name: Extract and validate version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Tag '$GITHUB_REF_NAME' is not valid semver (expected vX.Y.Z)"
+            exit 1
+          fi
+
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          if (( MINOR % 2 == 1 )); then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Version: $VERSION"
+          echo "Pre-release: $(( MINOR % 2 == 1 ? 1 : 0 ))"
+
+  ci:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Compile
+        run: bun run compile
+
+      - name: Test
+        run: xvfb-run -a bun run test
+
+      - name: Bundle
+        run: bun run bundle
+
+  publish:
+    needs: [validate, ci]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set version
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - name: Package
+        id: package
+        env:
+          IS_PRERELEASE: ${{ needs.validate.outputs.is_prerelease }}
+        run: |
+          VSCE_ARGS="--no-dependencies"
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            VSCE_ARGS="$VSCE_ARGS --pre-release"
+          fi
+          npx @vscode/vsce package $VSCE_ARGS
+          VSIX_FILE=$(ls *.vsix)
+          echo "vsix_file=$VSIX_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          IS_PRERELEASE: ${{ needs.validate.outputs.is_prerelease }}
+          VSIX_FILE: ${{ steps.package.outputs.vsix_file }}
+        run: |
+          VSCE_ARGS="--no-dependencies --skip-duplicate"
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            VSCE_ARGS="$VSCE_ARGS --pre-release"
+          fi
+          npx @vscode/vsce publish --packagePath "$VSIX_FILE" $VSCE_ARGS
+
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          IS_PRERELEASE: ${{ needs.validate.outputs.is_prerelease }}
+          VSIX_FILE: ${{ steps.package.outputs.vsix_file }}
+        run: |
+          OVSX_ARGS=""
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            OVSX_ARGS="--pre-release"
+          fi
+          npx ovsx publish "$VSIX_FILE" --pat "$OVSX_PAT" $OVSX_ARGS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.package.outputs.vsix_file }}
+          generate_release_notes: true
+          prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
