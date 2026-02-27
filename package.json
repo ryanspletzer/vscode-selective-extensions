@@ -10,6 +10,24 @@
     "type": "git",
     "url": "https://github.com/ryanspletzer/vscode-selective-extensions"
   },
+  "homepage": "https://github.com/ryanspletzer/vscode-selective-extensions#readme",
+  "bugs": {
+    "url": "https://github.com/ryanspletzer/vscode-selective-extensions/issues"
+  },
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
+  },
+  "keywords": [
+    "extensions",
+    "workspace",
+    "performance",
+    "disable",
+    "selective",
+    "management",
+    "allow-list"
+  ],
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -73,6 +91,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run bundle",
     "compile": "tsc -p ./",
     "bundle": "node esbuild.mjs",
     "watch": "tsc -watch -p ./",

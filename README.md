@@ -1,5 +1,11 @@
 # Selective Extensions
 
+<!-- Uncomment these badges after publishing to the VS Code Marketplace:
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
+[![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
+-->
+
 Declare which VS Code extensions should be active per workspace —
 everything else gets disabled via CLI relaunch.
 
@@ -29,12 +35,29 @@ with `--disable-extension` flags.
 - **Loop prevention** — env var guard prevents infinite relaunch cycles
 - **Remote session detection** — warns and skips relaunch in remote/SSH/WSL windows
 
+<!-- Screenshots — capture and add these before publishing:
+- Status bar indicator (normal and mismatch states)
+- Command palette showing Selective Extensions commands
+- Add Extension quick-pick multi-select
+- Relaunch notification prompt
+
+*Screenshots will be added before the first marketplace release.* -->
+
 ## Installation
+
+### From the Marketplace
+
+Search for **Selective Extensions** in the VS Code Extensions sidebar,
+or install from the command line:
+
+```bash
+code --install-extension ryanspletzer.selective-extensions
+```
 
 ### From `.vsix`
 
 ```bash
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-<version>.vsix
 ```
 
 ### From Source
@@ -43,12 +66,12 @@ code --install-extension selective-extensions-0.0.1.vsix
 # Using Bun (preferred)
 bun install
 bun run package
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-*.vsix
 
 # Using npm
 npm install
 npm run package
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-*.vsix
 ```
 
 ## Quick Start
@@ -144,22 +167,52 @@ Click the status bar item to open the command palette filtered to Selective Exte
 
 When a `.code-workspace` file is open, the extension uses `vscode.workspace.workspaceFile`
 as the workspace path for relaunch.
-Configuration is read from the first workspace folder.
+Workspace `settings.json` is read from the first workspace folder.
+The dedicated `.vscode/selective-extensions.json` is read from each folder
+and union-merged.
 
 ## Known Limitations
 
-- **Relaunch required** — VS Code has no public API to enable/disable extensions at runtime.
+- **Relaunch required** — VS Code has no public API to enable/disable extensions
+  at runtime.
   Changes take effect only after relaunching the window.
-- **Remote sessions** — the extension detects remote/SSH/WSL sessions and warns
-  that relaunch is not supported in these environments.
+  If the `code` CLI is not on your `PATH`, install it via the command palette:
+  **Shell Command: Install 'code' command in PATH**.
+- **Remote sessions** — the extension detects SSH, WSL, and Dev Container sessions
+  and warns that relaunch is not supported in these environments.
+  The `code` CLI relaunch mechanism only works in local desktop windows.
 - **Env var inheritance** — the `SELECTIVE_EXTENSIONS_APPLIED` loop guard env var
   is inherited by terminal sessions in the relaunched window.
   Running `code` from those terminals inherits the suppressed state.
-  The extension clears the env var on detection to mitigate this.
+  The extension clears the env var in its own process on activation,
+  but terminals already open may still have it.
+  Run `unset SELECTIVE_EXTENSIONS_APPLIED` to clear it manually.
 - **No first-run onboarding** — on first use you need to manually add extensions
   to the enable list via the command palette or by editing the config files.
 - **Extension dependencies** — users must manually include extension dependencies
-  in the enable list. The extension does not resolve dependency chains.
+  in the enable list. If extension A depends on extension B,
+  add both. The extension does not resolve dependency chains.
+- **Extensions not disabling?** — verify that `selectiveExtensions.enabled` is `true`
+  (check all three cascade levels), ensure `enabledExtensions` is not empty,
+  and check the **Selective Extensions** Output Channel
+  (`View > Output > Selective Extensions`) for diagnostic messages.
+
+## FAQ
+
+### Why does the extension union-merge enable lists instead of override?
+
+Union merge lets you build a layered configuration.
+A team can share a base set of extensions in workspace settings
+while each developer adds personal extras in the dedicated file.
+Override semantics would force duplication across levels.
+
+### How does this compare to VS Code Profiles?
+
+Profiles bundle settings, keybindings, snippets, and extensions together.
+Selective Extensions focuses only on the extension dimension —
+it lets you keep your settings and keybindings unchanged
+while controlling which extensions are active per workspace.
+The two approaches are complementary.
 
 ## Development
 
@@ -186,6 +239,10 @@ bun run lint         # or: npm run lint
 bun run package      # or: npm run package
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+
 ## License
 
-MIT
+[MIT](LICENSE)
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
