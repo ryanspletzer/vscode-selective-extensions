@@ -105,7 +105,10 @@ export function executeRelaunch(
   args: string[],
   logger: Logger,
 ): void {
-  logger.info(`Executing: ${cliPath} ${args.join(" ")}`);
+  const disableCount = args.filter((a) => a === "--disable-extension").length;
+  logger.info(
+    `Executing: ${cliPath} --reuse-window <workspace> (disabling ${disableCount} extensions)`,
+  );
 
   cp.execFile(cliPath, args, (err, _stdout, stderr) => {
     if (err) {

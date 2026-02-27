@@ -5,6 +5,12 @@ import type { Logger } from "./logger";
 
 export type CascadeSource = "user" | "workspace" | "selective-extensions.json";
 
+const EXTENSION_ID_PATTERN = /^[\w-]+\.[\w.-]+$/;
+
+export function isValidExtensionId(id: string): boolean {
+  return EXTENSION_ID_PATTERN.test(id);
+}
+
 export interface RawLayer {
   source: CascadeSource;
   folder?: string;
@@ -78,6 +84,37 @@ function readSettingsLayer(
   return layer;
 }
 
+function validateParsedConfig(
+  parsed: Record<string, unknown>,
+  logger?: Logger,
+): DedicatedFileContent {
+  const result: DedicatedFileContent = {};
+
+  if (typeof parsed.enabled === "boolean") {
+    result.enabled = parsed.enabled;
+  }
+  if (Array.isArray(parsed.enabledExtensions)) {
+    result.enabledExtensions = parsed.enabledExtensions.filter(
+      (e): e is string => {
+        if (typeof e !== "string") return false;
+        if (!isValidExtensionId(e)) {
+          logger?.warn(`Ignoring invalid extension ID: ${e}`);
+          return false;
+        }
+        return true;
+      },
+    );
+  }
+  if (typeof parsed.autoApply === "boolean") {
+    result.autoApply = parsed.autoApply;
+  }
+  if (typeof parsed.includeBuiltins === "boolean") {
+    result.includeBuiltins = parsed.includeBuiltins;
+  }
+
+  return result;
+}
+
 function readDedicatedFile(
   folderPath: string,
   logger: Logger,
@@ -91,25 +128,13 @@ function readDedicatedFile(
   try {
     const content = fs.readFileSync(filePath, "utf-8");
     const parsed = JSON.parse(content) as Record<string, unknown>;
+    const validated = validateParsedConfig(parsed, logger);
+
     const layer: RawLayer = {
       source: "selective-extensions.json",
       folder: folderPath,
+      ...validated,
     };
-
-    if (typeof parsed.enabled === "boolean") {
-      layer.enabled = parsed.enabled;
-    }
-    if (Array.isArray(parsed.enabledExtensions)) {
-      layer.enabledExtensions = parsed.enabledExtensions.filter(
-        (e): e is string => typeof e === "string",
-      );
-    }
-    if (typeof parsed.autoApply === "boolean") {
-      layer.autoApply = parsed.autoApply;
-    }
-    if (typeof parsed.includeBuiltins === "boolean") {
-      layer.includeBuiltins = parsed.includeBuiltins;
-    }
 
     return layer;
   } catch (err) {
@@ -249,7 +274,8 @@ export function readDedicatedFileContent(
   }
   try {
     const content = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(content) as DedicatedFileContent;
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    return validateParsedConfig(parsed);
   } catch {
     return {};
   }
@@ -261,8 +287,6 @@ export function writeDedicatedFile(
 ): void {
   const filePath = getDedicatedFilePath(folderPath);
   const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(content, null, 2) + "\n", "utf-8");
 }
