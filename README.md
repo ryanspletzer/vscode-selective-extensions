@@ -1,5 +1,11 @@
 # Selective Extensions
 
+<!-- Uncomment these badges after publishing to the VS Code Marketplace:
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
+[![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
+-->
+
 Declare which VS Code extensions should be active per workspace —
 everything else gets disabled via CLI relaunch.
 
@@ -29,7 +35,24 @@ with `--disable-extension` flags.
 - **Loop prevention** — env var guard prevents infinite relaunch cycles
 - **Remote session detection** — warns and skips relaunch in remote/SSH/WSL windows
 
+<!-- Screenshots — capture and add these before publishing:
+- Status bar indicator (normal and mismatch states)
+- Command palette showing Selective Extensions commands
+- Add Extension quick-pick multi-select
+- Relaunch notification prompt
+
+*Screenshots will be added before the first marketplace release.* -->
+
 ## Installation
+
+### From the Marketplace
+
+Search for **Selective Extensions** in the VS Code Extensions sidebar,
+or install from the command line:
+
+```bash
+code --install-extension ryanspletzer.selective-extensions
+```
 
 ### From `.vsix`
 
@@ -161,6 +184,72 @@ Configuration is read from the first workspace folder.
 - **Extension dependencies** — users must manually include extension dependencies
   in the enable list. The extension does not resolve dependency chains.
 
+## Troubleshooting
+
+### Extensions are not being disabled
+
+- Verify that `selectiveExtensions.enabled` is `true`
+  (check all three cascade levels).
+- Ensure `enabledExtensions` is not empty —
+  the extension takes no action when the list is empty.
+- Check the **Selective Extensions** Output Channel
+  (`View > Output > Selective Extensions`) for diagnostic messages.
+
+### Loop detection is triggering unexpectedly
+
+The extension sets the `SELECTIVE_EXTENSIONS_APPLIED` environment variable
+after relaunching.
+If you open a new VS Code window from a terminal inside a relaunched window,
+the env var carries over and suppresses the extension.
+Close the terminal or unset the variable:
+
+```bash
+unset SELECTIVE_EXTENSIONS_APPLIED
+```
+
+### Relaunch does not work in remote sessions
+
+The extension detects SSH, WSL, and Dev Container sessions
+and displays a warning instead of attempting to relaunch.
+The `code` CLI relaunch mechanism is only supported in local desktop windows.
+
+### `code` CLI not found
+
+The relaunch relies on the `code` command being on your `PATH`.
+Install it via the command palette:
+**Shell Command: Install 'code' command in PATH**.
+
+## FAQ
+
+### Why does the extension union-merge enable lists instead of override?
+
+Union merge lets you build a layered configuration.
+A team can share a base set of extensions in workspace settings
+while each developer adds personal extras in the dedicated file.
+Override semantics would force duplication across levels.
+
+### Do I need to include extension dependencies manually?
+
+Yes.
+The extension does not resolve or traverse dependency chains.
+If extension A depends on extension B,
+add both to your enable list.
+
+### How does this compare to VS Code Profiles?
+
+Profiles bundle settings, keybindings, snippets, and extensions together.
+Selective Extensions focuses only on the extension dimension —
+it lets you keep your settings and keybindings unchanged
+while controlling which extensions are active per workspace.
+The two approaches are complementary.
+
+### Why does this require a relaunch?
+
+VS Code does not expose a public API
+to enable or disable extensions at runtime.
+The only mechanism is relaunching with `--disable-extension` CLI flags,
+which is what this extension automates.
+
 ## Development
 
 ```bash
@@ -186,6 +275,10 @@ bun run lint         # or: npm run lint
 bun run package      # or: npm run package
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+
 ## License
 
-MIT
+[MIT](LICENSE)
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.

@@ -15,6 +15,10 @@ esbuild.mjs
 eslint.config.mjs
 tsconfig.json
 CLAUDE.md
+CONTRIBUTING.md
+.serena/
+.github/
+images/README.md
 bun.lock
 **/*.test.ts
 **/*.test.js
