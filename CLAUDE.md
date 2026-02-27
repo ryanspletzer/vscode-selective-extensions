@@ -129,6 +129,48 @@ GitHub Actions dependency updates.
 Security policy (`SECURITY.md`) directs reporters to GitHub private
 vulnerability reporting.
 
+## PR Readiness Checklist
+
+Before opening a pull request, walk through every item below.
+Skip a row only if the change genuinely does not apply
+(e.g., a docs-only PR can skip "Tests pass").
+
+### Code quality
+
+- [ ] `bun run lint` passes with no errors or warnings
+- [ ] `bun run compile` succeeds (no TypeScript errors)
+- [ ] `bun run bundle` succeeds (esbuild produces output)
+- [ ] `bun run test` passes (all Mocha suites green)
+
+### Tests
+
+- [ ] New or changed behavior has corresponding tests in `src/test/`
+- [ ] Tests use Mocha TDD interface (`suite`/`test`, not `describe`/`it`)
+
+### Documentation
+
+- [ ] `CHANGELOG.md` updated under `[Unreleased]` for user-facing changes
+- [ ] `README.md` updated if commands, settings, or user-visible behavior changed
+- [ ] `spec/spec.md` updated if the change alters the extension specification
+
+### Manifest and packaging
+
+- [ ] `package.json` updated if new commands, settings, activation events,
+  or version bump are needed
+- [ ] `.vscodeignore` reviewed if new top-level files or directories were added
+- [ ] `bun run package` builds a valid `.vsix` (spot-check for new features)
+
+### Markdown
+
+- [ ] All Markdown files pass `markdownlint-cli2`
+  (run the markdown linter fixer skill or `npx markdownlint-cli2`)
+
+### Commits and branch
+
+- [ ] Commits follow [conventional commits](https://www.conventionalcommits.org/)
+- [ ] Branch is named `feature/<description>` (or `fix/`, `docs/`, etc.)
+- [ ] Branch is up to date with `main` (merge, not rebase)
+
 ## Git Workflow
 
 - Main branch: `main`
