@@ -6,3 +6,6 @@ line-length:
 no-hard-tabs: true
 
 no-trailing-spaces: true
+
+single-title:
+  front_matter_title: ""

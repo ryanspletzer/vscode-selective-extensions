@@ -67,7 +67,7 @@ in the spec.
 
 ### Architecture and Module Structure
 
-8. **Code organization**: Flat modules in `src/`.
+1. **Code organization**: Flat modules in `src/`.
 
    | File | Responsibility |
    | ---- | -------------- |
@@ -78,14 +78,14 @@ in the spec.
    | `statusBar.ts` | Status bar item lifecycle |
    | `loopGuard.ts` | Env var check for loop prevention |
 
-9. **Config API**: The cascade reader returns both a resolved config object
+2. **Config API**: The cascade reader returns both a resolved config object
    AND per-setting provenance (which level each value came from).
    The `showList` command needs source info per extension,
    so this data must be available from the config layer.
 
 ### Edge Cases and Robustness
 
-10. **CLI discovery**: Detect which VS Code variant is running
+1. **CLI discovery**: Detect which VS Code variant is running
     (stable, Insiders, Codium) via `vscode.env.appName`
     and use the corresponding CLI name
     (`code`, `code-insiders`, `codium`).
@@ -94,19 +94,19 @@ in the spec.
     (`/usr/local/bin/code` on macOS, `Program Files` on Windows).
     Show a clear error message if not found anywhere.
 
-11. **Remote session handling**: Detect via `vscode.env.remoteName`.
+2. **Remote session handling**: Detect via `vscode.env.remoteName`.
     If set, skip automatic relaunch and show a one-time notification
     explaining why.
     The manual `Apply` command is still available but warns
     that it may not work correctly in remote contexts.
 
-12. **Loop prevention**: Env var only (`SELECTIVE_EXTENSIONS_APPLIED=1`).
+3. **Loop prevention**: Env var only (`SELECTIVE_EXTENSIONS_APPLIED=1`).
     No workspaceState fallback in v1.
     The env var is scoped to the child process
     and doesn't persist across unrelated window opens.
     YAGNI on the fallback.
 
-13. **Implicit includes**: The extension always auto-includes itself,
+4. **Implicit includes**: The extension always auto-includes itself,
     the active color theme, and the active icon theme.
     Forgetting themes is a common gotcha
     that would break the UI appearance on relaunch.
@@ -114,14 +114,14 @@ in the spec.
     by iterating `vscode.extensions.all` and inspecting
     each extension's `contributes.themes` manifest entries.
 
-14. **Large disable lists**: No limit or warning.
+5. **Large disable lists**: No limit or warning.
     The CLI can handle many `--disable-extension` flags.
     Modern OS command-line limits are generous enough
     for any realistic extension count.
 
 ### Testing Strategy
 
-15. **Test focus**: Unit tests for pure logic,
+1. **Test focus**: Unit tests for pure logic,
     minimal integration tests.
     - Thorough unit tests for config cascade merge,
       loop guard, CLI command building
@@ -133,34 +133,34 @@ in the spec.
 The following decisions were made during planning
 to resolve gaps identified by SpecFlow analysis.
 
-16. **Remove command scope**: The remove quick-pick shows level-3 entries
+1. **Remove command scope**: The remove quick-pick shows level-3 entries
     as removable. Entries from levels 1 and 2 appear as read-only
     with a note to edit those files manually. No schema change needed.
 
-17. **No-workspace windows**: Read user-level config only (level 1).
+2. **No-workspace windows**: Read user-level config only (level 1).
     Skip levels 2 and 3. Show status bar if configured.
     No relaunch — nothing meaningful to relaunch to.
 
-18. **Output Channel**: Add a "Selective Extensions" Output Channel.
+3. **Output Channel**: Add a "Selective Extensions" Output Channel.
     Log key decisions (why it stopped, CLI command built, errors).
     New module: `logger.ts`.
 
-19. **Notification dismissal**: Treat X button / Escape identically
+4. **Notification dismissal**: Treat X button / Escape identically
     to Skip — clear loop guard flag, take no action.
 
-20. **Manual Apply confirmation**: Show the same confirmation notification
+5. **Manual Apply confirmation**: Show the same confirmation notification
     as autoApply (counts + [Apply Now] / [Skip]).
     Consistent UX, no surprise relaunches.
 
-21. **Malformed JSON handling**: Log warning to Output Channel,
+6. **Malformed JSON handling**: Log warning to Output Channel,
     show a warning notification with an "Open File" button,
     treat the file as absent and continue with levels 1 and 2.
 
-22. **Multi-root workspace path**: Use `vscode.workspace.workspaceFile`
+7. **Multi-root workspace path**: Use `vscode.workspace.workspaceFile`
     when available (`.code-workspace` file).
     Fall back to first folder path for single-folder workspaces.
 
-23. **First-run onboarding**: Out of scope for v1. No onboarding.
+8. **First-run onboarding**: Out of scope for v1. No onboarding.
     Document the manual first-run flow in the README.
 
 ## Open Questions
