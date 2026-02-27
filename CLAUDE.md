@@ -61,12 +61,15 @@ bun run package      # Create .vsix package
 | `CHANGELOG.md`          | Keep a Changelog format, update per release |
 | `CONTRIBUTING.md`       | Contributor guide and PR guidelines         |
 | `README.md`             | User-facing documentation                   |
-| `docs/`                 | Brainstorms, plans, and solution docs       |
-| `.github/workflows/`    | CI pipeline (`ci.yml`)                      |
+| `docs/`                 | Brainstorms, plans, solutions, publishing   |
+| `SECURITY.md`           | Security policy (private vuln reporting)    |
+| `.github/workflows/`    | CI (`ci.yml`) and CodeQL (`codeql.yml`)     |
+| `.github/dependabot.yml`| Dependabot config (npm + GitHub Actions)    |
 | `esbuild.mjs`           | esbuild bundler config                      |
 | `eslint.config.mjs`     | ESLint flat config                          |
 | `.vscodeignore`         | Files excluded from .vsix package           |
 | `.markdownlint.yaml`    | markdownlint configuration                  |
+| `tsconfig.json`         | TypeScript compiler config (strict mode)    |
 | `.editorconfig`         | Editor formatting defaults                  |
 
 ## Architecture
@@ -76,11 +79,15 @@ The extension follows this flow on workspace open:
 1. Read config from three-level cascade (user settings.json,
    workspace settings.json, .vscode/selective-extensions.json)
 2. Resolve `enabled` (highest-specificity wins); stop if false
-3. Merge `enabledExtensions` (union of all levels); stop if empty
-4. Check loop prevention flag (env var `SELECTIVE_EXTENSIONS_APPLIED`)
-5. Compute `disableList = allInstalled - enableList`
-6. Show notification with Apply Now / Skip
-7. Relaunch via `code --reuse-window` with `--disable-extension` flags
+3. Merge `enabledExtensions` (union of all levels) plus implicit
+   includes (self, active color theme, icon theme); stop if empty
+4. Check loop guard env var (`SELECTIVE_EXTENSIONS_APPLIED`);
+   stop if already relaunched
+5. Compute `disableList = allInstalled - enableList`; stop if empty
+6. Detect remote session; skip relaunch if remote
+7. Check `autoApply`; stop if false (wait for manual Apply command)
+8. Show notification with Apply Now / Skip
+9. Relaunch via `code --reuse-window` with `--disable-extension` flags
 
 ## Configuration Cascade
 
@@ -108,11 +115,19 @@ and [Semantic Versioning](https://semver.org/).
   `Fixed`, or `Security`
 - Place new entries under an `[Unreleased]` heading until a version is cut
 
-## CI
+## CI and Security
 
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push and PR:
+GitHub Actions workflows in `.github/workflows/`:
 
-- Install, lint, compile, bundle, and test
+- **`ci.yml`** — runs on push and PR: install, lint, compile, bundle, test
+- **`codeql.yml`** — CodeQL static analysis for JavaScript/TypeScript
+  (push, PR, weekly schedule)
+
+Dependabot (`.github/dependabot.yml`) opens weekly PRs for npm and
+GitHub Actions dependency updates.
+
+Security policy (`SECURITY.md`) directs reporters to GitHub private
+vulnerability reporting.
 
 ## Git Workflow
 
