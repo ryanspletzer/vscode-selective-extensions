@@ -6,6 +6,7 @@ import {
   readAndMerge,
   readDedicatedFileContent,
   writeDedicatedFile,
+  isValidExtensionId,
   type CascadeSource,
 } from "./config";
 import { triggerRelaunch, getLastProvenance } from "./extension";
@@ -380,7 +381,10 @@ export function registerCommands(
           const parsed = JSON.parse(Buffer.from(content).toString("utf-8")) as {
             recommendations?: string[];
           };
-          recommendations = parsed.recommendations ?? [];
+          recommendations = (parsed.recommendations ?? []).filter(
+            (r): r is string =>
+              typeof r === "string" && isValidExtensionId(r),
+          );
         } catch {
           vscode.window.showInformationMessage(
             "No .vscode/extensions.json found or it contains no recommendations.",
