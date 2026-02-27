@@ -1,6 +1,8 @@
 # Selective Extensions
 
 [![CI](https://github.com/ryanspletzer/vscode-selective-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/ryanspletzer/vscode-selective-extensions/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ryanspletzer/vscode-selective-extensions/actions/workflows/codeql.yml/badge.svg)](https://github.com/ryanspletzer/vscode-selective-extensions/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/github/license/ryanspletzer/vscode-selective-extensions)](https://github.com/ryanspletzer/vscode-selective-extensions/blob/main/LICENSE)
 
 <!-- Uncomment these badges after publishing to the VS Code Marketplace:
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/ryanspletzer.selective-extensions)](https://marketplace.visualstudio.com/items?itemName=ryanspletzer.selective-extensions)
