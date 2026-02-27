@@ -46,19 +46,28 @@ bun run package      # Create .vsix package
 
 ## Key File Paths
 
-| Path               | Purpose                                    |
-| ------------------ | ------------------------------------------ |
-| `spec/spec.md`     | Extension specification                    |
-| `src/extension.ts` | Main extension entry point                 |
-| `src/config.ts`    | Three-level config cascade reader          |
-| `src/relaunch.ts`  | CLI detection and process execution        |
-| `src/commands.ts`  | All 5 command handlers                     |
-| `src/statusBar.ts` | Status bar item management                 |
-| `src/loopGuard.ts` | Env var loop prevention                    |
-| `src/logger.ts`    | Output Channel wrapper                     |
-| `src/test/`        | Test files                                 |
-| `package.json`     | Extension manifest and contribution points |
-| `.vscodeignore`    | Files excluded from .vsix package          |
+| Path                    | Purpose                                     |
+| ----------------------- | ------------------------------------------- |
+| `spec/spec.md`          | Extension specification                     |
+| `src/extension.ts`      | Main extension entry point                  |
+| `src/config.ts`         | Three-level config cascade reader           |
+| `src/relaunch.ts`       | CLI detection and process execution         |
+| `src/commands.ts`       | All 5 command handlers                      |
+| `src/statusBar.ts`      | Status bar item management                  |
+| `src/loopGuard.ts`      | Env var loop prevention                     |
+| `src/logger.ts`         | Output Channel wrapper                      |
+| `src/test/`             | Test files                                  |
+| `package.json`          | Extension manifest and contribution points  |
+| `CHANGELOG.md`          | Keep a Changelog format, update per release |
+| `CONTRIBUTING.md`       | Contributor guide and PR guidelines         |
+| `README.md`             | User-facing documentation                   |
+| `docs/`                 | Brainstorms, plans, and solution docs       |
+| `.github/workflows/`    | CI pipeline (`ci.yml`)                      |
+| `esbuild.mjs`           | esbuild bundler config                      |
+| `eslint.config.mjs`     | ESLint flat config                          |
+| `.vscodeignore`         | Files excluded from .vsix package           |
+| `.markdownlint.yaml`    | markdownlint configuration                  |
+| `.editorconfig`         | Editor formatting defaults                  |
 
 ## Architecture
 
@@ -87,6 +96,23 @@ Settings in `settings.json` use the `selectiveExtensions.*` namespace.
 The dedicated file uses bare keys (no namespace).
 
 Settings: `enabled`, `enabledExtensions`, `autoApply`, `includeBuiltins`
+
+## Changelog
+
+The project maintains a `CHANGELOG.md` following
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format
+and [Semantic Versioning](https://semver.org/).
+
+- Update `CHANGELOG.md` for every user-facing change
+- Group entries under `Added`, `Changed`, `Deprecated`, `Removed`,
+  `Fixed`, or `Security`
+- Place new entries under an `[Unreleased]` heading until a version is cut
+
+## CI
+
+GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push and PR:
+
+- Install, lint, compile, bundle, and test
 
 ## Git Workflow
 
