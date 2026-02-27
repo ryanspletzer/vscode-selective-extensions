@@ -42,68 +42,24 @@ This guide covers everything you need to get started.
 
 ## Development Workflow
 
-### Watch Mode
-
-Run the TypeScript compiler in watch mode for automatic recompilation:
-
-```bash
-bun run watch    # or: npm run watch
-```
+See the **Development** section in [README.md](README.md) for the full list
+of build commands (`compile`, `bundle`, `watch`, `test`, `lint`, `package`).
 
 ### Debugging (F5)
 
 1. Open the project in VS Code.
-2. Press `F5` to launch the **Extension Development Host**.
+2. Press `F5` to launch the **Extension Development Host**
+   (uses the `.vscode/launch.json` configuration).
 3. The extension activates on `onStartupFinished` —
    open any folder in the host window to trigger it.
 4. Use the **Debug Console** and **Output Channel**
    (`Selective Extensions`) for diagnostic logs.
 
-### Linting
-
-```bash
-bun run lint    # or: npm run lint
-```
-
-ESLint is configured in `eslint.config.mjs`.
-Fix all warnings and errors before submitting a PR.
-
-### Testing
-
-```bash
-bun run test    # or: npm run test
-```
+### Testing Notes
 
 Tests use Mocha with the **TDD interface** (`suite` / `test`,
 not `describe` / `it`).
 Test files live in `src/test/`.
-
-## Project Structure
-
-| Path | Purpose |
-| ---- | ------- |
-| `src/extension.ts` | Main entry point (activate / deactivate) |
-| `src/config.ts` | Three-level configuration cascade reader |
-| `src/relaunch.ts` | CLI detection and child process execution |
-| `src/commands.ts` | All five command handlers |
-| `src/statusBar.ts` | Status bar item management |
-| `src/loopGuard.ts` | Env var loop prevention |
-| `src/logger.ts` | Output Channel wrapper |
-| `src/test/` | Mocha test files |
-| `spec/spec.md` | Extension specification |
-| `package.json` | Extension manifest and contribution points |
-| `esbuild.mjs` | Production bundler configuration |
-| `tsconfig.json` | TypeScript compiler options |
-| `eslint.config.mjs` | ESLint configuration |
-
-## Code Style
-
-- **TypeScript strict mode** — `"strict": true` in `tsconfig.json`
-- Follow VS Code extension API patterns and conventions
-- Use `async` / `await` over raw Promises
-- Mocha TDD interface for tests (`suite` / `test`)
-- Prefer descriptive variable names; avoid single-letter names
-  outside loop counters
 
 ## Pull Request Guidelines
 
@@ -127,6 +83,7 @@ Test files live in `src/test/`.
    bun run lint
    bun run test
    bun run compile
+   bun run bundle
    ```
 
 4. Keep PRs focused — one logical change per pull request.
@@ -142,7 +99,7 @@ Build and install the extension locally to test end-to-end:
 bun run package    # or: npm run package
 
 # Install the .vsix
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-*.vsix
 
 # Reload VS Code and verify the extension activates
 ```

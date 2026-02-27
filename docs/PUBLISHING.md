@@ -66,7 +66,8 @@ npx vsce publish minor --no-dependencies    # 0.0.2 -> 0.1.0
 npx vsce publish major --no-dependencies    # 0.1.0 -> 1.0.0
 ```
 
-This updates `package.json`, creates a git tag, and publishes in one step.
+This updates `package.json` and publishes in one step.
+Create a git tag manually if desired.
 
 ## Package Inspection
 

@@ -57,7 +57,7 @@ code --install-extension ryanspletzer.selective-extensions
 ### From `.vsix`
 
 ```bash
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-<version>.vsix
 ```
 
 ### From Source
@@ -66,12 +66,12 @@ code --install-extension selective-extensions-0.0.1.vsix
 # Using Bun (preferred)
 bun install
 bun run package
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-*.vsix
 
 # Using npm
 npm install
 npm run package
-code --install-extension selective-extensions-0.0.1.vsix
+code --install-extension selective-extensions-*.vsix
 ```
 
 ## Quick Start
@@ -167,57 +167,35 @@ Click the status bar item to open the command palette filtered to Selective Exte
 
 When a `.code-workspace` file is open, the extension uses `vscode.workspace.workspaceFile`
 as the workspace path for relaunch.
-Configuration is read from the first workspace folder.
+Workspace `settings.json` is read from the first workspace folder.
+The dedicated `.vscode/selective-extensions.json` is read from each folder
+and union-merged.
 
 ## Known Limitations
 
-- **Relaunch required** — VS Code has no public API to enable/disable extensions at runtime.
+- **Relaunch required** — VS Code has no public API to enable/disable extensions
+  at runtime.
   Changes take effect only after relaunching the window.
-- **Remote sessions** — the extension detects remote/SSH/WSL sessions and warns
-  that relaunch is not supported in these environments.
+  If the `code` CLI is not on your `PATH`, install it via the command palette:
+  **Shell Command: Install 'code' command in PATH**.
+- **Remote sessions** — the extension detects SSH, WSL, and Dev Container sessions
+  and warns that relaunch is not supported in these environments.
+  The `code` CLI relaunch mechanism only works in local desktop windows.
 - **Env var inheritance** — the `SELECTIVE_EXTENSIONS_APPLIED` loop guard env var
   is inherited by terminal sessions in the relaunched window.
   Running `code` from those terminals inherits the suppressed state.
-  The extension clears the env var on detection to mitigate this.
+  The extension clears the env var in its own process on activation,
+  but terminals already open may still have it.
+  Run `unset SELECTIVE_EXTENSIONS_APPLIED` to clear it manually.
 - **No first-run onboarding** — on first use you need to manually add extensions
   to the enable list via the command palette or by editing the config files.
 - **Extension dependencies** — users must manually include extension dependencies
-  in the enable list. The extension does not resolve dependency chains.
-
-## Troubleshooting
-
-### Extensions are not being disabled
-
-- Verify that `selectiveExtensions.enabled` is `true`
-  (check all three cascade levels).
-- Ensure `enabledExtensions` is not empty —
-  the extension takes no action when the list is empty.
-- Check the **Selective Extensions** Output Channel
+  in the enable list. If extension A depends on extension B,
+  add both. The extension does not resolve dependency chains.
+- **Extensions not disabling?** — verify that `selectiveExtensions.enabled` is `true`
+  (check all three cascade levels), ensure `enabledExtensions` is not empty,
+  and check the **Selective Extensions** Output Channel
   (`View > Output > Selective Extensions`) for diagnostic messages.
-
-### Loop detection is triggering unexpectedly
-
-The extension sets the `SELECTIVE_EXTENSIONS_APPLIED` environment variable
-after relaunching.
-If you open a new VS Code window from a terminal inside a relaunched window,
-the env var carries over and suppresses the extension.
-Close the terminal or unset the variable:
-
-```bash
-unset SELECTIVE_EXTENSIONS_APPLIED
-```
-
-### Relaunch does not work in remote sessions
-
-The extension detects SSH, WSL, and Dev Container sessions
-and displays a warning instead of attempting to relaunch.
-The `code` CLI relaunch mechanism is only supported in local desktop windows.
-
-### `code` CLI not found
-
-The relaunch relies on the `code` command being on your `PATH`.
-Install it via the command palette:
-**Shell Command: Install 'code' command in PATH**.
 
 ## FAQ
 
@@ -228,13 +206,6 @@ A team can share a base set of extensions in workspace settings
 while each developer adds personal extras in the dedicated file.
 Override semantics would force duplication across levels.
 
-### Do I need to include extension dependencies manually?
-
-Yes.
-The extension does not resolve or traverse dependency chains.
-If extension A depends on extension B,
-add both to your enable list.
-
 ### How does this compare to VS Code Profiles?
 
 Profiles bundle settings, keybindings, snippets, and extensions together.
@@ -242,13 +213,6 @@ Selective Extensions focuses only on the extension dimension —
 it lets you keep your settings and keybindings unchanged
 while controlling which extensions are active per workspace.
 The two approaches are complementary.
-
-### Why does this require a relaunch?
-
-VS Code does not expose a public API
-to enable or disable extensions at runtime.
-The only mechanism is relaunching with `--disable-extension` CLI flags,
-which is what this extension automates.
 
 ## Development
 

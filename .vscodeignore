@@ -19,6 +19,7 @@ CONTRIBUTING.md
 .serena/
 .github/
 images/README.md
+*.vsix
 bun.lock
 **/*.test.ts
 **/*.test.js
