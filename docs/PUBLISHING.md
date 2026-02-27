@@ -82,23 +82,52 @@ This lists every file that would be packaged.
 Cross-reference with `.vscodeignore` to ensure
 source code, tests, and dev files are excluded.
 
-## CI/CD Publishing (Future)
+## Automated Release Workflow
 
-A GitHub Actions workflow can automate publishing on tagged releases:
+The `.github/workflows/release.yml` workflow automates publishing
+when a `v*` tag is pushed.
 
-1. Create a repository secret `VSCE_PAT` with your Azure DevOps PAT.
-2. Add a workflow triggered on version tags (`v*`).
-3. The workflow runs tests, bundles, and calls `vsce publish`.
+### What the workflow does
 
-Example trigger:
+1. **Validate** — extracts the version from the tag,
+   validates strict semver (`vX.Y.Z`),
+   and detects pre-release via odd minor version
+   (e.g., `v0.3.0` is pre-release, `v1.0.0` is stable)
+2. **CI** — runs lint, compile, test, and bundle (mirrors `ci.yml`)
+3. **Publish** — bumps `package.json` version (build-time only),
+   packages the `.vsix`,
+   publishes to VS Code Marketplace and Open VSX Registry,
+   and creates a GitHub Release with the `.vsix` attached
 
-```yaml
-on:
-  push:
-    tags:
-      - 'v*'
-```
+### Required secrets
 
-This is not yet implemented.
-See the `.github/workflows/` directory for the existing CI workflow
-that can be extended.
+| Secret     | Source                    | Scope                                     |
+| ---------- | ------------------------- | ----------------------------------------- |
+| `VSCE_PAT` | Azure DevOps PAT          | Marketplace (Manage), all accessible orgs |
+| `OVSX_PAT` | open-vsx.org access token | Publish access                            |
+
+`GITHUB_TOKEN` is provided automatically via the workflow's
+`permissions: contents: write` block.
+
+### One-time Open VSX setup
+
+The `ryanspletzer` namespace must be claimed on
+[open-vsx.org](https://open-vsx.org) before the first publish.
+
+### How to release
+
+1. Ensure `CHANGELOG.md` is up to date and the `[Unreleased]` section
+   is ready to become a versioned entry
+2. Bump the version in `package.json` locally
+   (or let the workflow handle it from the tag)
+3. Commit, then create and push a tag:
+
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+4. The workflow runs automatically — monitor it in the
+   [Actions tab](https://github.com/ryanspletzer/vscode-selective-extensions/actions)
+5. On success, the extension appears on both marketplaces
+   and a GitHub Release is created with the `.vsix` asset

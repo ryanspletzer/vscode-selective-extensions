@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Automated release workflow publishing to VS Code Marketplace
+  and Open VSX Registry on tag push
 - Auto-update workflow for `bun.lock` on Dependabot PRs (`dependabot-bun-lock.yml`)
 - CodeQL static analysis workflow for JavaScript/TypeScript
 - Dependabot configuration for npm and GitHub Actions dependency updates
