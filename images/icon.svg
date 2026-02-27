@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Dark background -->
+  <rect width="128" height="128" rx="16" fill="#1E1E1E"/>
+
+  <!-- Top-left: Enabled extension with checkmark -->
+  <rect x="16" y="16" width="44" height="44" rx="8" fill="#007ACC"/>
+  <polyline points="27,39 35,47 51,30" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Bottom-left: Enabled extension with checkmark -->
+  <rect x="16" y="68" width="44" height="44" rx="8" fill="#007ACC"/>
+  <polyline points="27,91 35,99 51,82" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Bottom-right: Enabled extension with checkmark -->
+  <rect x="68" y="68" width="44" height="44" rx="8" fill="#007ACC"/>
+  <polyline points="79,91 87,99 103,82" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Top-right: Disabled extension — detached, rotated, with empty checkbox outline -->
+  <g transform="rotate(-10, 94, 32)">
+    <rect x="72" y="10" width="44" height="44" rx="8" fill="#3D3D3D" opacity="0.75"/>
+    <rect x="83" y="21" width="22" height="22" rx="4" fill="none" stroke="#888" stroke-width="2.5"/>
+  </g>
+</svg>
