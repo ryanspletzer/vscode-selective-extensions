@@ -9,7 +9,12 @@ import {
   isValidExtensionId,
   type CascadeSource,
 } from "./config";
-import { triggerRelaunch, getLastProvenance } from "./extension";
+import { triggerRelaunch, getLastProvenance, getImplicitExtensions, type ImplicitExtension } from "./extension";
+
+function getExtraImplicitExtensions(configuredExtensions: string[]): ImplicitExtension[] {
+  const configuredSet = new Set(configuredExtensions.map((e) => e.toLowerCase()));
+  return getImplicitExtensions().filter((e) => !configuredSet.has(e.id.toLowerCase()));
+}
 
 function getWorkspaceFolderPath(): string | undefined {
   const folders = vscode.workspace.workspaceFolders;
@@ -21,6 +26,7 @@ function getWorkspaceFolderPath(): string | undefined {
 
 async function promptRelaunch(
   disableList: string[],
+  implicitExts: ImplicitExtension[],
   logger: Logger,
 ): Promise<void> {
   if (disableList.length === 0) {
@@ -34,7 +40,7 @@ async function promptRelaunch(
   );
 
   if (action === "Relaunch") {
-    await triggerRelaunch(disableList, logger);
+    await triggerRelaunch(disableList, implicitExts, logger);
   }
 }
 
@@ -106,7 +112,8 @@ export function registerCommands(
         return;
       }
 
-      await triggerRelaunch(disableList, logger);
+      const extraImplicit = getExtraImplicitExtensions(config.enabledExtensions);
+      await triggerRelaunch(disableList, extraImplicit, logger);
     }),
   );
 
@@ -189,7 +196,8 @@ export function registerCommands(
           disableList.length === 0,
         );
 
-        await promptRelaunch(disableList, logger);
+        const extraImplicit = getExtraImplicitExtensions(updated.config.enabledExtensions);
+        await promptRelaunch(disableList, extraImplicit, logger);
       },
     ),
   );
@@ -303,7 +311,8 @@ export function registerCommands(
             disableList.length === 0,
           );
 
-          await promptRelaunch(disableList, logger);
+          const extraImplicit = getExtraImplicitExtensions(updated.config.enabledExtensions);
+          await promptRelaunch(disableList, extraImplicit, logger);
         }
       },
     ),

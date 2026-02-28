@@ -15,11 +15,16 @@ import { createStatusBar, type StatusBar } from "./statusBar";
 let logger: Logger;
 let statusBar: StatusBar;
 
-function getImplicitExtensions(): string[] {
-  const implicit: string[] = [];
+export interface ImplicitExtension {
+  id: string;
+  label: string;
+}
+
+export function getImplicitExtensions(): ImplicitExtension[] {
+  const implicit: ImplicitExtension[] = [];
 
   // Always include this extension
-  implicit.push("ryanspletzer.selective-extensions");
+  implicit.push({ id: "ryanspletzer.selective-extensions", label: "Selective Extensions" });
 
   // Include active color theme extension
   const colorThemeName = vscode.workspace
@@ -28,7 +33,7 @@ function getImplicitExtensions(): string[] {
   if (colorThemeName) {
     const themeExt = findExtensionForTheme(colorThemeName, "themes");
     if (themeExt) {
-      implicit.push(themeExt);
+      implicit.push({ id: themeExt, label: `${colorThemeName} theme` });
     }
   }
 
@@ -39,7 +44,7 @@ function getImplicitExtensions(): string[] {
   if (iconThemeName) {
     const iconExt = findExtensionForTheme(iconThemeName, "iconThemes");
     if (iconExt) {
-      implicit.push(iconExt);
+      implicit.push({ id: iconExt, label: `${iconThemeName} icon theme` });
     }
   }
 
@@ -110,8 +115,9 @@ async function runActivationFlow(): Promise<void> {
 
   // Step 4: Compute merged enable list + implicit includes
   const implicitExts = getImplicitExtensions();
+  const implicitIds = implicitExts.map((e) => e.id.toLowerCase());
   const fullEnableList = [
-    ...new Set([...config.enabledExtensions, ...implicitExts.map((e) => e.toLowerCase())]),
+    ...new Set([...config.enabledExtensions, ...implicitIds]),
   ];
 
   if (config.enabledExtensions.length === 0) {
@@ -155,7 +161,10 @@ async function runActivationFlow(): Promise<void> {
   }
 
   // Steps 9-12: Relaunch
-  await triggerRelaunch(disableList, logger);
+  // Only count implicit extensions that aren't already in the user's configured list
+  const configuredSet = new Set(config.enabledExtensions.map((e) => e.toLowerCase()));
+  const extraImplicit = implicitExts.filter((e) => !configuredSet.has(e.id.toLowerCase()));
+  await triggerRelaunch(disableList, extraImplicit, logger);
 
   // Store provenance for commands to use
   // (workaround: attach to global state so commands can access it)
@@ -164,14 +173,23 @@ async function runActivationFlow(): Promise<void> {
 
 export async function triggerRelaunch(
   disableList: string[],
+  implicitExts: ImplicitExtension[],
   log: Logger,
 ): Promise<void> {
   // Set loop guard before showing notification
   setLoopGuard();
 
-  const keepCount = vscode.extensions.all.length - disableList.length;
+  const nonBuiltinCount = vscode.extensions.all.filter(
+    (ext) => !ext.packageJSON?.isBuiltin,
+  ).length;
+  const keepCount = nonBuiltinCount - disableList.length;
+  const implicitSuffix =
+    implicitExts.length > 0
+      ? ` (plus ${implicitExts.length} implicit: ${implicitExts.map((e) => e.label).join(", ")})`
+      : "";
+  const configuredCount = keepCount - implicitExts.length;
   const action = await vscode.window.showInformationMessage(
-    `Selective Extensions will disable ${disableList.length} extensions and keep ${keepCount} enabled.`,
+    `Selective Extensions will disable ${disableList.length} extensions and keep ${configuredCount} enabled${implicitSuffix}.`,
     "Apply Now",
     "Skip",
   );

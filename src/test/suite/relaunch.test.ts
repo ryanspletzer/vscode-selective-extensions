@@ -5,7 +5,7 @@ suite("relaunch.buildArgs", () => {
   test("builds args with single disable ID", () => {
     const args = buildArgs("/path/to/workspace", ["ext-a"]);
     assert.deepStrictEqual(args, [
-      "--reuse-window",
+      "--new-window",
       "/path/to/workspace",
       "--disable-extension",
       "ext-a",
@@ -15,7 +15,7 @@ suite("relaunch.buildArgs", () => {
   test("builds args with multiple disable IDs", () => {
     const args = buildArgs("/path/to/workspace", ["ext-a", "ext-b", "ext-c"]);
     assert.deepStrictEqual(args, [
-      "--reuse-window",
+      "--new-window",
       "/path/to/workspace",
       "--disable-extension",
       "ext-a",
@@ -28,7 +28,7 @@ suite("relaunch.buildArgs", () => {
 
   test("builds args with empty disable list", () => {
     const args = buildArgs("/path/to/workspace", []);
-    assert.deepStrictEqual(args, ["--reuse-window", "/path/to/workspace"]);
+    assert.deepStrictEqual(args, ["--new-window", "/path/to/workspace"]);
   });
 
   test("handles workspace path with spaces", () => {
