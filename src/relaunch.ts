@@ -129,22 +129,43 @@ function executeMacOSRelaunch(
   // way to honor them is to launch from outside VS Code's process tree
   // after this window closes.
   //
-  // Strategy: write a temp shell script that waits for this window to close,
-  // then launches VS Code fresh. Spawn it fully detached via launchctl so
-  // it survives the VS Code process exiting.
+  // Strategy: write args to a JSON file and a launcher script that reads
+  // them via jq/node, avoiding shell interpolation of untrusted input.
+  // Spawn the script fully detached so it survives VS Code exiting.
   const appName = MACOS_APP_NAMES[vscode.env.appName] ?? "Visual Studio Code";
 
-  // Shell-escape each arg
-  const escapedArgs = args.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(" ");
+  const basePath = path.join(os.tmpdir(), `selective-extensions-relaunch-${process.pid}`);
+  const argsPath = `${basePath}.json`;
+  const scriptPath = `${basePath}.sh`;
 
-  const scriptPath = path.join(os.tmpdir(), `selective-extensions-relaunch-${process.pid}.sh`);
+  // Write args to a separate JSON file — no shell interpolation needed.
+  const argsData = { appName, args };
+
+  try {
+    fs.writeFileSync(argsPath, JSON.stringify(argsData), { mode: 0o600 });
+  } catch (err) {
+    clearLoopGuard();
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error(`Failed to write relaunch args: ${message}`);
+    vscode.window.showErrorMessage(
+      `Selective Extensions: Relaunch failed. Could not write temp args file.`,
+    );
+    return;
+  }
+
+  // The launcher script reads args from the JSON file using node to avoid
+  // any shell interpolation of extension IDs or paths.
   const script = `#!/bin/bash
-# Wait for the current VS Code window to close
+ARGS_FILE="${basePath}.json"
+SCRIPT_FILE="${basePath}.sh"
 sleep 2
-# Launch a fresh VS Code instance
-open -n -a '${appName.replace(/'/g, "'\\''")}' --args ${escapedArgs}
-# Clean up this script
-rm -f '${scriptPath.replace(/'/g, "'\\''")}'
+# Use node to parse JSON and exec open with proper arg separation
+node -e '
+  const data = JSON.parse(require("fs").readFileSync(process.argv[1], "utf-8"));
+  const cp = require("child_process");
+  cp.execFileSync("/usr/bin/open", ["-n", "-a", data.appName, "--args", ...data.args]);
+' "$ARGS_FILE"
+rm -f "$ARGS_FILE" "$SCRIPT_FILE"
 `;
 
   try {
@@ -156,6 +177,8 @@ rm -f '${scriptPath.replace(/'/g, "'\\''")}'
     vscode.window.showErrorMessage(
       `Selective Extensions: Relaunch failed. Could not write temp script.`,
     );
+    // Clean up the args file
+    try { fs.unlinkSync(argsPath); } catch { /* ignore */ }
     return;
   }
 
@@ -164,7 +187,8 @@ rm -f '${scriptPath.replace(/'/g, "'\\''")}'
   );
 
   // Spawn with a minimal environment so the script runs outside VS Code's
-  // context. PATH must include /usr/bin for `open` and `rm`.
+  // context. PATH must include /usr/bin for `open` and `rm`, and a node
+  // path for parsing the JSON args file.
   const child = cp.spawn("/bin/bash", [scriptPath], {
     detached: true,
     stdio: "ignore",
