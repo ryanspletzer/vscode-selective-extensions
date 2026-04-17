@@ -117,7 +117,7 @@ jobs:
           npx ovsx publish "$VSIX_FILE" --pat "$OVSX_PAT" $OVSX_ARGS
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.package.outputs.vsix_file }}
           generate_release_notes: true
