@@ -6,6 +6,17 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "deps"
+    ignore:
+      # TypeScript 7 (the native port) removes internals that
+      # @typescript-eslint/typescript-estree reads, so `eslint src/` crashes
+      # with "Cannot read properties of undefined (reading 'Cjs')". No
+      # typescript-eslint release supports it yet — 8.65.0 (latest) and
+      # 8.65.1-alpha.19 (canary) both cap the peer range at
+      # `typescript >=4.8.4 <6.1.0`. The source itself already compiles
+      # clean under 7.0.2, so drop this ignore once typescript-eslint
+      # ships TypeScript 7 support.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
