@@ -23,3 +23,10 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "ci"
+    groups:
+      # github/codeql-action's init/autobuild/analyze steps must all run
+      # the same version, so per-action PRs each mix versions and fail
+      # the analyze check. Group all actions updates into one PR.
+      actions:
+        patterns:
+          - "*"
