@@ -15,6 +15,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+          # The lockfile commit below goes through the GitHub API (so it is
+          # signed), not git push, so the checkout token is never needed —
+          # and bun install runs third-party lifecycle scripts that must not
+          # find a write-scoped token in .git/config.
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
