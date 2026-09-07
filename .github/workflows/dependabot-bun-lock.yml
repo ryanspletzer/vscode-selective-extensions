@@ -37,10 +37,20 @@ jobs:
           # Commits made through the API are signed by GitHub. Committing with
           # the git CLI would produce an unsigned commit, which the
           # required_signatures rule on main rejects at merge time.
+          #
+          # The payload is built with jq and sent via --input rather than as
+          # --raw-field arguments: the base64 lockfile is a single argv entry,
+          # and Linux caps one argument at 128 KiB (MAX_ARG_STRLEN), which
+          # bun.lock now exceeds ("Argument list too long", exit 126).
+          base64 -w0 bun.lock > "$RUNNER_TEMP/bun.lock.b64"
+          jq -n \
+            --arg message "chore: update bun.lock" \
+            --arg branch "$BRANCH" \
+            --arg sha "$(git rev-parse HEAD:bun.lock)" \
+            --rawfile content "$RUNNER_TEMP/bun.lock.b64" \
+            '{message: $message, branch: $branch, sha: $sha, content: $content}' \
+            > "$RUNNER_TEMP/commit-payload.json"
           gh api "repos/$GITHUB_REPOSITORY/contents/bun.lock" \
             --method PUT \
-            --raw-field message="chore: update bun.lock" \
-            --raw-field branch="$BRANCH" \
-            --raw-field sha="$(git rev-parse HEAD:bun.lock)" \
-            --raw-field content="$(base64 -w0 bun.lock)" \
+            --input "$RUNNER_TEMP/commit-payload.json" \
             --silent
