@@ -14,7 +14,7 @@ spec/
 esbuild.mjs
 eslint.config.mjs
 tsconfig.json
-CLAUDE.md
+AGENTS.md
 CONTRIBUTING.md
 .serena/
 .github/
